@@ -2,4 +2,5 @@
 /nitchNerd
 /nitchNoNerd
 /src/nitch
-/nitch-armv7
+/nitch-*
+/dist/
