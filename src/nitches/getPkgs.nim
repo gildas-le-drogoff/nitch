@@ -1,7 +1,7 @@
 import
   ../funcs/packages/[getPacmanPkgs, getRpmPkgs,
                      getPortagePkgs, getXbpsPkgs,
-                     getDpkgPkgs]
+                     getDpkgPkgs, getKissPkgs]
 
 proc getPkgs*(distroId: string): string =
   case distroId:
@@ -34,6 +34,9 @@ proc getPkgs*(distroId: string): string =
 
   of "void":
     result = getXbpsPkgs()
+
+  of "kiss":
+    result = getKissPkgs()
 
   of "ubuntu":
     result = getDpkgPkgs()
