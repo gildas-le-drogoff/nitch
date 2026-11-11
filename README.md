@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://cdn.discordapp.com/attachments/955362477137362954/996769449480826971/2022-07-13_16-25.png" width="350px">
-
 # `NiTch`
 
 <h3>
@@ -23,8 +21,6 @@
 
 # Description 📖
 
-<img src="https://media.discordapp.net/attachments/955362477137362954/997839005460725841/2022-07-16_15-15_1.png" width="42%" align="right">
-
 `nitch` is a small and incredibly fast system fetch written fully in `nim👑` without any dependencies, on my pc
 it executes in around 1.70 miliseconds.
 
@@ -37,6 +33,36 @@ If anything in the source code is unclear or is lacking in its explanation, open
 btw written in `nim👑`
 
 why `nim👑`? because it's fast and simple
+
+<br>
+
+# Supported systems 🐧
+### logos
+`arch`, `artix`, `arcolinux`, `cachyos`, `endeavouros`, `garuda`, `manjaro`,
+`debian`, `ubuntu`, `linuxmint`, `pop`, `zorin`, `fedora`, `centos`, `rhel`, `almalinux`, `rocky`,
+`opensuse-*` (tumbleweed, leap, ...), `gentoo`, `slackware`, `void`, `kiss`, `nixos`, `bedrock`,
+`openwrt` / `lede` (and derivatives)
+
+Any other distro gets the default `nitch` logo.
+
+The distro is read from `/etc/os-release` (parsed by `nitch` itself, single quotes
+supported), or from `/etc/openwrt_release` on old OpenWrt releases without `os-release`.
+
+### package managers
+| package manager | distros |
+|---|---|
+| `pacman` | arch, artix, archcraft, manjaro, endeavouros, garuda, cachyos, arcolinux |
+| `dpkg` | debian, ubuntu, linuxmint, pop, zorin |
+| `rpm` | fedora, centos, rhel, almalinux, rocky |
+| `portage` | gentoo |
+| `xbps` | void |
+| `kiss` | kiss |
+| `nix` | nixos |
+| `opkg` / `ipkg` | openwrt, lede (up to 24.10, and very old releases) |
+| `apk` | openwrt 25.x+, alpine |
+
+On any other distro, the package manager is auto-detected from its database
+(`/var/lib/pacman/local`, `/var/lib/dpkg/status`, `/var/db/xbps`, ...).
 
 <br>
 
@@ -65,90 +91,158 @@ sudo rm /usr/local/bin/nitch
 
 <br>
 
+# OpenWrt 📡
+`nitch` runs on OpenWrt / LEDE routers, from very old releases to the current ones
+(derivatives such as GL.iNet, Turris or ImmortalWrt are detected through `/etc/openwrt_release`).
+
+In addition to the usual fields, it shows:
+```
+ model  | router model (/tmp/sysinfo/model, device-tree, /proc/cpuinfo, DMI)
+ cpu    | SoC / cpu model and number of cores (/proc/cpuinfo)
+ target | target and arch, e.g. ath79/generic (mips_24kc)
+ disk   | used and total space of the writable flash (/overlay, /jffs or /)
+ load   | load average (/proc/loadavg)
+```
+The build revision (e.g. `r23809-234f1a2efa`) is appended to the distro name.
+
+When `$USER` / `$SHELL` are unset (common with dropbear/ash), `nitch` falls back to
+`$LOGNAME` and `/etc/passwd`. Memory is computed even without `MemAvailable` (kernels < 3.14).
+
+See [Building](#building-) to build a static ARMv7 binary for your router.
+
+<br>
+
 # Configuration ⚙️
 ### `nitch` is configured by changing the source code
 ### `src/funcs/drawing.nim` - config file
 ```nim
-import std/terminal       # import standard terminal lib
-import getDistroId        # import to get distro id through /etc/os-release
-#import ../assets/logos   # uncomment if you use your own logo
-import ../nitches/[getUser, getHostname,
-                   getDistro, getKernel,
-                   getUptime, getShell,
-                   getPkgs, getRam,
-                   getLogo, getLogoColor]  # import nitches to get info about user system
+import
+  std/terminal,     # import standard terminal lib
+  std/strutils,
+  getDistroId,      # import to get distro id through /etc/os-release
+  ../assets/logos,  # uncomment if you use your own logo
+  ../nitches/[getUser, getHostname,
+                  getDistro, getKernel,
+                  getUptime, getShell,
+                  getPkgs, getRam, getLogo,
+                  getOpenwrt]  # import nitches to get info about user system
 
 # the main function for drawing fetch
-proc drawInfo*() =
+proc drawInfo*(asciiArt: bool) =
   let  # distro id (arch, manjaro, debian)
-    distroId: string = getDistroId()
+    distroId = getDistroId()
+    openwrt = isOpenwrt(distroId)  # OpenWrt, LEDE or a derivative
 
   let  # logo and it color
-    logoColor: ForegroundColor = getLogoColor(distroId)  # color for logo
-    defaultLogo: string  = getLogo(distroId)             # default logo from nitch/src/assets/logos
+    coloredLogo = getLogo(if openwrt: "openwrt" else: distroId)  # color + logo tuple
+    # (fgRed, nitchLogo)
 
   const  # icons before cotegores
-    userIcon: string   = " "  # recomended: " " or "|>"
-    hnameIcon: string  = " "  # recomended: " " or "|>"
-    distroIcon: string = "󰻀 "  # recomended: "󰻀 " or "|>"
-    kernelIcon: string = "󰌢 "  # recomended: "󰌢 " or "|>"
-    uptimeIcon: string = " "  # recomended: " " or "|>"
-    shellIcon: string  = " "  # recomended: " " or "|>"
-    pkgsIcon: string   = "󰏖 "  # recomended: "󰏖 " or "|>"
-    ramIcon: string    = "󰍛 "  # recomended: "󰍛 " or "|>"
-    colorsIcon: string = "󰏘 "  # recomended: "󰏘 " or "->"
+    userIcon   = " "  # recomended: " " or "|>"
+    hnameIcon  = " "  # recomended: " " or "|>"
+    distroIcon = "󰻀 "  # recomended: "󰻀 " or "|>"
+    kernelIcon = "󰌢 "  # recomended: "󰌢 " or "|>"
+    uptimeIcon = " "  # recomended: " " or "|>"
+    shellIcon  = " "  # recomended: " " or "|>"
+    pkgsIcon   = "󰏖 "  # recomended: "󰏖 " or "|>"
+    ramIcon    = "󰍛 "  # recomended: "󰍛 " or "|>"
+    colorsIcon = "󰏘 "  # recomended: "󰏘 " or "->"
+    # OpenWrt only
+    modelIcon  = "\u{F0469} "  # 󰑩 router   recomended: "\u{F0469} " or "|>"
+    cpuIcon    = "\u{F4BC} "   #  cpu      recomended: "\u{F4BC} " or "|>"
+    targetIcon = "\u{F061A} "  # 󰘚 chip     recomended: "\u{F061A} " or "|>"
+    diskIcon   = "\u{F02CA} "  # 󰋊 harddisk recomended: "\u{F02CA} " or "|>"
+    loadIcon   = "\u{F029A} "  # 󰊚 gauge    recomended: "\u{F029A} " or "|>"
     # please insert any char after the icon
     # to avoid the bug with cropping the edge of the icon
 
-    dotIcon: string = ""  # recomended: "" or "■"
+    dotIcon = ""  # recomended: "" or "■"
     # icon for demonstrate colors
 
   const  # categories
-    userCat: string   = " user   │ "  # recomended: " user   │ "
-    hnameCat: string  = " hname  │ "  # recomended: " hname  │ "
-    distroCat: string = " distro │ "  # recomended: " distro │ "
-    kernelCat: string = " kernel │ "  # recomended: " kernel │ "-
-    uptimeCat: string = " uptime │ "  # recomended: " uptime │ "
-    shellCat: string  = " shell  │ "  # recomended: " shell  │ "
-    pkgsCat: string   = " pkgs   │ "  # recomended: " pkgs   │ "
-    ramCat: string    = " memory │ "  # recomended: " memory │ "
-    colorsCat: string = " colors │ "  # recomended: " colors │ "
+    userCat   = " user   │ "  # recomended: " user   │ "
+    hnameCat  = " hname  │ "  # recomended: " hname  │ "
+    distroCat = " distro │ "  # recomended: " distro │ "
+    kernelCat = " kernel │ "  # recomended: " kernel │ "-
+    uptimeCat = " uptime │ "  # recomended: " uptime │ "
+    shellCat  = " shell  │ "  # recomended: " shell  │ "
+    pkgsCat   = " pkgs   │ "  # recomended: " pkgs   │ "
+    ramCat    = " memory │ "  # recomended: " memory │ "
+    colorsCat = " colors │ "  # recomended: " colors │ "
+    # OpenWrt only
+    modelCat  = " model  │ "
+    cpuCat    = " cpu    │ "
+    targetCat = " target │ "
+    diskCat   = " disk   │ "
+    loadCat   = " load   │ "
 
-  let  # all info about system
-    userInfo: string     = getUser()          # get user through $USER env variable
-    hostnameInfo: string = getHostname()      # get Hostname hostname through /etc/hostname
-    distroInfo: string   = getDistro()        # get distro through /etc/os-release
-    kernelInfo: string   = getKernel()        # get kernel through /proc/version
-    uptimeInfo: string   = getUptime()        # get Uptime through /proc/uptime file
-    shellInfo: string    = getShell()         # get shell through $SHELL env variable
-    pkgsInfo: string     = getPkgs(distroId)  # get amount of packages in distro
-    ramInfo: string      = getRam()           # get ram through /proc/meminfo
+  var  # all info about system
+    userInfo     = getUser()          # get user through $USER env variable
+    hostnameInfo = getHostname()      # get Hostname hostname through /etc/hostname
+    distroInfo   = getDistro()        # get distro through /etc/os-release (or /etc/openwrt_release)
+    kernelInfo   = getKernel()        # get kernel through /proc/version
+    uptimeInfo   = getUptime()        # get Uptime through /proc/uptime file
+    shellInfo    = getShell()         # get shell through $SHELL env variable
+    pkgsInfo     = getPkgs(distroId)  # get amount of packages in distro
+    ramInfo      = getRam()           # get ram through /proc/meminfo
+
+  var  # OpenWrt only, empty values are not displayed
+    modelInfo, cpuInfo, targetInfo, diskInfo, loadInfo: string
+
+  if openwrt:
+    modelInfo  = getModel()    # /tmp/sysinfo/model, device-tree, /proc/cpuinfo
+    cpuInfo    = getCpu()      # /proc/cpuinfo (system type, Hardware, model name)
+    targetInfo = getTarget()   # DISTRIB_TARGET + DISTRIB_ARCH
+    diskInfo   = getStorage()  # free space on /overlay (writable flash)
+    loadInfo   = getLoad()     # /proc/loadavg
+
+    let revision = getRevision()  # r23809-234f1a2efa
+    if revision != "" and revision notin distroInfo:
+      distroInfo &= " " & revision
 
   const  # aliases for colors
-    color1: ForegroundColor = fgRed
-    color2: ForegroundColor = fgYellow
-    color3: ForegroundColor = fgGreen
-    color4: ForegroundColor = fgCyan
-    color5: ForegroundColor = fgBlue
-    color6: ForegroundColor = fgMagenta
-    color7: ForegroundColor = fgWhite
-    color8: ForegroundColor = fgBlack
-    color0: ForegroundColor = fgDefault
+    color1 = fgRed
+    color2 = fgYellow
+    color3 = fgGreen
+    color4 = fgCyan
+    color5 = fgBlue
+    color6 = fgMagenta
+    color7 = fgWhite
+    color8 = fgBlack
+    color0 = fgDefault
+
+  # ascii art
+  if not asciiArt:
+    discard
+  else:
+    stdout.styledWrite(styleBright, coloredLogo[0], coloredLogo[1], color0)
 
   # colored out
-  stdout.styledWrite(styleBright, logoColor, defaultLogo)
-  stdout.styledWrite(styleBright, "  ╭───────────╮\n")
-  stdout.styledWrite(styleBright, "  │ ", color1, userIcon, color0, userCat, color1, userInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color2, hnameIcon, color0, hnameCat, color2, hostnameInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color3, distroIcon, color0, distroCat, color3, distroInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color4, kernelIcon, color0, kernelCat, color4, kernelInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color5, uptimeIcon, color0, uptimeCat, color5, uptimeInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color6, shellIcon, color0, shellCat, color6, shellInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color1, pkgsIcon, color0, pkgsCat, color1, pkgsInfo, "\n")
-  stdout.styledWrite(styleBright, "  │ ", color2, ramIcon, color0, ramCat, fgYellow, ramInfo, "\n")
-  stdout.styledWrite(styleBright, "  ├───────────┤\n")
-  stdout.styledWrite(styleBright, "  │ ", color7, colorsIcon, color0, colorsCat, color7, dotIcon, " ", color1, dotIcon, " ", color2, dotIcon, " ", color3, dotIcon, " ", color4, dotIcon, " ", color5, dotIcon, " ", color6, dotIcon, " ", color8, dotIcon, "\n")
-  stdout.styledWrite(styleBright, "  ╰───────────╯\n\n")
+  stdout.styledWrite("\n", styleBright, "  ╭───────────╮\n")
+  stdout.styledWrite("  │ ", color2, userIcon, color0, userCat, color1, userInfo, color0, "\n",)
+  if not isEmptyOrWhitespace(hostnameInfo):
+    stdout.styledWrite("  │ ", color2, hnameIcon, color0, hnameCat, color2, hostnameInfo, color0, "\n")
+  stdout.styledWrite("  │ ", color3, distroIcon, color0, distroCat, color3, distroInfo, color0, "\n")
+  stdout.styledWrite("  │ ", color4, kernelIcon, color0, kernelCat, color4, kernelInfo, color0, "\n")
+  stdout.styledWrite("  │ ", color5, uptimeIcon, color0, uptimeCat, color5, uptimeInfo, color0, "\n")
+  stdout.styledWrite("  │ ", color6, shellIcon, color0, shellCat, color6, shellInfo, color0, "\n")
+  stdout.styledWrite("  │ ", color1, pkgsIcon, color0, pkgsCat, color1, pkgsInfo, color0, "\n")
+  stdout.styledWrite("  │ ", color2, ramIcon, color0, ramCat, fgYellow, ramInfo, color0, "\n")
+
+  # OpenWrt only
+  if modelInfo != "":
+    stdout.styledWrite("  │ ", color3, modelIcon, color0, modelCat, color3, modelInfo, color0, "\n")
+  if cpuInfo != "":
+    stdout.styledWrite("  │ ", color4, cpuIcon, color0, cpuCat, color4, cpuInfo, color0, "\n")
+  if targetInfo != "":
+    stdout.styledWrite("  │ ", color5, targetIcon, color0, targetCat, color5, targetInfo, color0, "\n")
+  if diskInfo != "":
+    stdout.styledWrite("  │ ", color6, diskIcon, color0, diskCat, color6, diskInfo, color0, "\n")
+  if loadInfo != "":
+    stdout.styledWrite("  │ ", color1, loadIcon, color0, loadCat, color1, loadInfo, color0, "\n")
+  stdout.styledWrite("  ├───────────┤\n")
+  stdout.styledWrite("  │ ", color7, colorsIcon, color0, colorsCat, color7, dotIcon, " ", color1, dotIcon, " ", color2, dotIcon, " ", color3, dotIcon, " ", color4, dotIcon, " ", color5, dotIcon, " ", color6, dotIcon, " ", color8, dotIcon, color0, "\n")
+  stdout.styledWrite("  ╰───────────╯\n\n")
 ```
 
 # Building 📦
@@ -181,15 +275,27 @@ nimble build -d:static
 just build it from source on the target machine (or cross compile with
 `--cpu:arm64 --os:linux` and a suitable C cross compiler).
 
+### static ARMv7 binary (OpenWrt routers, Raspberry Pi, ...)
+With a musl cross toolchain (e.g. `arm-linux-musleabihf-cross` from [musl.cc](https://musl.cc/)) in your `PATH`:
+```fish
+nimble armv7
+```
+This produces a stripped, static `nitch-armv7` binary in the root directory of the project.
+Use another toolchain prefix with the `CROSS` variable:
+```fish
+CROSS=armv7l-linux-musleabihf nimble armv7
+```
+Then copy it to the device, e.g. `scp -O nitch-armv7 root@192.168.1.1:/usr/bin/nitch`.
+
 <br>
 
 # File architecture 📁
 ```fish
 nitch
   ├── LICENSE
-  ├── nitch
   ├── nitch.nimble
   ├── README.md
+  ├── setup.sh
   ├── src
   │   ├── assets
   │   │   ├── assets.nim
@@ -198,13 +304,25 @@ nitch
   │   │   └── argParser.nim
   │   ├── funcs
   │   │   ├── drawing.nim
+  │   │   ├── getDistroId.nim
+  │   │   ├── osRelease.nim
   │   │   ├── packages
-  │   │   │   └── getPacmanPkgs.nim
+  │   │   │   ├── getDpkgPkgs.nim
+  │   │   │   ├── getKissPkgs.nim
+  │   │   │   ├── getNixPkgs.nim
+  │   │   │   ├── getOpkgPkgs.nim
+  │   │   │   ├── getPacmanPkgs.nim
+  │   │   │   ├── getPortagePkgs.nim
+  │   │   │   ├── getRpmPkgs.nim
+  │   │   │   └── getXbpsPkgs.nim
+  │   │   ├── passwd.nim
   │   │   └── perform.nim
   │   ├── nitches
   │   │   ├── getDistro.nim
   │   │   ├── getHostname.nim
   │   │   ├── getKernel.nim
+  │   │   ├── getLogo.nim
+  │   │   ├── getOpenwrt.nim
   │   │   ├── getPkgs.nim
   │   │   ├── getRam.nim
   │   │   ├── getShell.nim
@@ -213,18 +331,24 @@ nitch
   │   ├── nitch.nim
   │   └── nitch.nim.cfg
   └── templates
-      ├── cfgParser
+      ├── bfetch
       ├── cfgParser.nim
+      ├── colorTest.nim
       ├── data.dat
+      ├── echo.sh
       ├── listFiles.nim
       ├── readLine.nim
       ├── refTest.nim
+      ├── rxfetch
       ├── shellCheck.nim
+      ├── slice.nim
       ├── test.cfg
+      ├── testCounter.nim
       ├── testFile
-      └── testProc.nim
+      ├── testProc.nim
+      └── tupleTest.nim
 
-  7 directories, 30 files
+  7 directories, 48 files
 ```
 
 # Thanks for ideas & examples 💬
