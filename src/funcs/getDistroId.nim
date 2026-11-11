@@ -1,8 +1,5 @@
 import
-  std/parsecfg
+  osRelease
 
 proc getDistroId*(): string =
-  let
-    osRelease = "/etc/os-release".loadConfig
-
-  result = osRelease.getSectionValue("", "ID")
+  result = getOsReleaseValue("ID")

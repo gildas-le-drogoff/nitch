@@ -1,7 +1,9 @@
 import
-  std/parsecfg
+  ../funcs/osRelease
 
 proc getDistro*(): string =
-  result = "/etc/os-release".loadConfig.getSectionValue("", "PRETTY_NAME") 
+  result = getOsReleaseValue("PRETTY_NAME")
   if result == "":
-    result = "/etc/os-release".loadConfig.getSectionValue("", "NAME")
+    result = getOsReleaseValue("NAME")
+  if result == "":
+    result = "Linux"
