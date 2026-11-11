@@ -1,8 +1,15 @@
 import
-  std/[strutils, osproc]
+  std/os
 
 proc getDpkgPkgs*(): string =
-  let
-    count = osproc.execCmdEx("dpkg -l")[0]
+  # count only really installed packages ("dpkg -l" also lists headers
+  # and removed packages whose config files are still present)
+  const statusFile = "/var/lib/dpkg/status"
+  var count = 0
 
-  result = $(count.split("\n").len - 1)
+  if fileExists(statusFile):
+    for line in lines(statusFile):
+      if line == "Status: install ok installed":
+        inc count
+
+  result = $count

@@ -1,8 +1,10 @@
 import
-  std/[strutils, osproc]
+  std/os
 
 proc getKissPkgs*(): string =
-  let
-    count = osproc.execCmdEx("ls -d /var/db/kiss/installed/*")[0]
+  var count = 0
+  for kind, _ in walkDir("/var/db/kiss/installed"):
+    if kind in {pcDir, pcLinkToDir}:
+      inc count
 
-  result = $(count.split("\n").len - 1)
+  result = $count

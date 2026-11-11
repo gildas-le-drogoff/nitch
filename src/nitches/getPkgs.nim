@@ -1,32 +1,36 @@
 import
+  std/os,
   ../funcs/packages/[getPacmanPkgs, getRpmPkgs,
                      getPortagePkgs, getXbpsPkgs,
-                     getDpkgPkgs, getKissPkgs]
+                     getDpkgPkgs, getKissPkgs,
+                     getNixPkgs]
+
+# guess the package manager from its database when the distro id is unknown
+proc detectPkgs(): string =
+  if dirExists("/var/lib/pacman/local"):
+    result = getPacmanPkgs()
+  elif fileExists("/var/lib/dpkg/status"):
+    result = getDpkgPkgs()
+  elif dirExists("/var/db/xbps"):
+    result = getXbpsPkgs()
+  elif dirExists("/var/db/kiss/installed"):
+    result = getKissPkgs()
+  elif dirExists("/var/db/pkg"):
+    result = getPortagePkgs()
+  elif dirExists("/var/lib/rpm") or dirExists("/usr/lib/sysimage/rpm"):
+    result = getRpmPkgs()
+  elif dirExists("/run/current-system/sw"):
+    result = getNixPkgs()
+  else:
+    result = ">3"
 
 proc getPkgs*(distroId: string): string =
   case distroId:
-  of "arch":
+  of "arch", "artix", "archcraft", "manjaro", "endeavouros",
+     "garuda", "cachyos", "arcolinux":
     result = getPacmanPkgs()
 
-  of "artix":
-    result = getPacmanPkgs()
-
-  of "archcraft":
-    result = getPacmanPkgs()
-
-  of "manjaro":
-    result = getPacmanPkgs()
-
-  of "endeavouros":
-    result = getPacmanPkgs()
-
-  of "garuda":
-    result = getPacmanPkgs()
-
-  of "cachyos":
-    result = getPacmanPkgs()
-
-  of "fedora":
+  of "fedora", "centos", "rhel", "almalinux", "rocky":
     result = getRpmPkgs()
 
   of "gentoo":
@@ -38,20 +42,11 @@ proc getPkgs*(distroId: string): string =
   of "kiss":
     result = getKissPkgs()
 
-  of "ubuntu":
-    result = getDpkgPkgs()
+  of "nixos":
+    result = getNixPkgs()
 
-  of "debian":
+  of "ubuntu", "debian", "linuxmint", "pop", "zorin":
     result = getDpkgPkgs()
-  
-  of "linuxmint":
-    result = getDpkgPkgs()
-
-  of "pop":
-    result = getDpkgPkgs()
-
-  of "arcolinux":
-    result = getPacmanPkgs()
 
   else:
-    result = ">3"
+    result = detectPkgs()

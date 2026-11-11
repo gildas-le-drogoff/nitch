@@ -1,8 +1,14 @@
 import
-  std/[strutils, osproc]
+  std/[os, strutils]
 
 proc getPortagePkgs*(): string =
-  let
-    count = osproc.execCmdEx("ls -d /var/db/pkg/*/*| cut -f5- -d/")[0]
+  # every installed package is a /var/db/pkg/<category>/<package> directory
+  var count = 0
+  for catKind, category in walkDir("/var/db/pkg"):
+    if catKind != pcDir:
+      continue
+    for pkgKind, pkg in walkDir(category, relative = true):
+      if pkgKind == pcDir and not pkg.startsWith("-MERGING-"):
+        inc count
 
-  result = $(count.split("\n").len - 1)
+  result = $count
