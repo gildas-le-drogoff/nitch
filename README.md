@@ -52,9 +52,15 @@ nitch
 
 flags:
 ```
- -f --fetch   | return fetch about system
- -h --help    | return help message
- -v --version | return version of program
+ -f --fetch    | return fetch about system
+ -a --no-ascii | return fetch without ascii art
+ -h --help     | return help message
+ -v --version  | return version of program
+```
+
+# Uninstall 🗑️
+```fish
+sudo rm /usr/local/bin/nitch
 ```
 
 <br>
@@ -162,6 +168,18 @@ cd nitch/
 nimble build
 ```
 After that you will get a ready-made binary file in the root directory of the project.
+
+### static build
+If the binary has to run on other machines (older glibc, error like
+``version `GLIBC_2.34' not found``), build a fully static binary:
+```fish
+nimble build -d:static
+```
+
+### other architectures (arm64, ...)
+`nim` compiles to C, so `nitch` works on any architecture with a C compiler:
+just build it from source on the target machine (or cross compile with
+`--cpu:arm64 --os:linux` and a suitable C cross compiler).
 
 <br>
 
