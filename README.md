@@ -3,7 +3,7 @@
 # `NiTch`
 
 <h3>
-  incredibly fast system fetch written in <code>nim👑</code>
+  incredibly fast system fetch written in <code>nim</code>
 </h3>
 <br>
 
@@ -19,9 +19,8 @@
 
 </div>
 
-# Description 📖
-
-`nitch` is a small and incredibly fast system fetch written fully in `nim👑` without any dependencies, on my pc
+# Description
+`nitch` is a small and incredibly fast system fetch written fully in `nim` without any dependencies, on my pc
 it executes in around 1.70 miliseconds.
 
 The source code of `nitch` is highly documented and I hope it will act as a learning resource for nim
@@ -30,13 +29,13 @@ and linux systems architecture
 If anything in the source code is unclear or is lacking in its explanation, open an issue. Sometimes you get too close to something and you fail to see the "bigger picture"!
 
 
-btw written in `nim👑`
+btw written in `nim`
 
-why `nim👑`? because it's fast and simple
+why `nim`? because it's fast and simple
 
 <br>
 
-# Supported systems 🐧
+# Supported systems
 ### logos
 `arch`, `artix`, `arcolinux`, `cachyos`, `endeavouros`, `garuda`, `manjaro`,
 `debian`, `ubuntu`, `linuxmint`, `pop`, `zorin`, `fedora`, `centos`, `rhel`, `almalinux`, `rocky`,
@@ -66,12 +65,12 @@ On any other distro, the package manager is auto-detected from its database
 
 <br>
 
-# Installation ☁️
+# Installation
 ```fish
 wget https://raw.githubusercontent.com/unxsh/nitch/main/setup.sh && sh setup.sh
 ```
 
-# Usage 🪨
+# Usage
 ```
 nitch
 ```
@@ -84,14 +83,14 @@ flags:
  -v --version  | return version of program
 ```
 
-# Uninstall 🗑️
+# Uninstall
 ```fish
 sudo rm /usr/local/bin/nitch
 ```
 
 <br>
 
-# OpenWrt 📡
+# OpenWrt
 `nitch` runs on OpenWrt / LEDE routers, from very old releases to the current ones
 (derivatives such as GL.iNet, Turris or ImmortalWrt are detected through `/etc/openwrt_release`).
 
@@ -108,144 +107,103 @@ The build revision (e.g. `r23809-234f1a2efa`) is appended to the distro name.
 When `$USER` / `$SHELL` are unset (common with dropbear/ash), `nitch` falls back to
 `$LOGNAME` and `/etc/passwd`. Memory is computed even without `MemAvailable` (kernels < 3.14).
 
-See [Building](#building-) to build a static ARMv7 binary for your router.
+See [Building](#building) to build a static ARMv7 binary for your router.
 
 <br>
 
-# Configuration ⚙️
-### `nitch` is configured by changing the source code
-### `src/funcs/drawing.nim` - config file
+# Configuration
+`nitch` has no config file: it is configured by editing
+[`src/funcs/drawing.nim`](src/funcs/drawing.nim) and rebuilding (see [Building](#building)).
+
+| what | constants in `drawing.nim` | default |
+|---|---|---|
+| icons | `userIcon`, `hnameIcon`, ..., `dotIcon` | Nerd Font glyphs (see below) |
+| labels | `userCat`, `hnameCat`, ..., `loadCat` | `" user   │ "`, `" hname  │ "`, ... |
+| colors | `color1` ... `color8`, `color0` | standard terminal colors |
+| logo | `coloredLogo` | logo of the detected distro (`src/assets/logos.nim`) |
+| displayed lines | the `stdout.styledWrite(...)` calls at the end of `drawInfo` | all lines |
+
+### Icons
+The default icons are [Nerd Font](https://www.nerdfonts.com/) glyphs: your terminal
+needs a Nerd Font to display them. They are listed here by code point (the glyphs
+themselves do not render on GitHub or on most phones). Use the ASCII alternative
+if you don't use a Nerd Font.
+
+| constant | shown for | Nerd Font glyph | code point | ASCII alternative |
+|---|---|---|---|---|
+| `userIcon` | user | `nf-fa-user` | `U+F007` | `\|>` |
+| `hnameIcon` | hostname | `nf-dev-ghost_small` | `U+E714` | `\|>` |
+| `distroIcon` | distro | `nf-md-penguin` | `U+F0EC0` | `\|>` |
+| `kernelIcon` | kernel | `nf-md-laptop` | `U+F0322` | `\|>` |
+| `uptimeIcon` | uptime | `nf-fa-clock_o` | `U+F017` | `\|>` |
+| `shellIcon` | shell | `nf-oct-terminal` | `U+F489` | `\|>` |
+| `pkgsIcon` | packages | `nf-md-package_variant` | `U+F03D6` | `\|>` |
+| `ramIcon` | memory | `nf-md-memory` | `U+F035B` | `\|>` |
+| `colorsIcon` | colors | `nf-md-palette` | `U+F03D8` | `->` |
+| `modelIcon` | model (OpenWrt) | `nf-md-router_wireless` | `U+F0469` | `\|>` |
+| `cpuIcon` | cpu (OpenWrt) | `nf-oct-cpu` | `U+F4BC` | `\|>` |
+| `targetIcon` | target (OpenWrt) | `nf-md-chip` | `U+F061A` | `\|>` |
+| `diskIcon` | disk (OpenWrt) | `nf-md-harddisk` | `U+F02CA` | `\|>` |
+| `loadIcon` | load (OpenWrt) | `nf-md-gauge` | `U+F029A` | `\|>` |
+| `dotIcon` | color dots | `nf-oct-dot_fill` | `U+F444` | `■` (`U+25A0`) |
+
+In `drawing.nim` the icons are written with their code point (`"\u{F007} "` is the
+glyph followed by a space), so the source stays readable in any editor, even without a Nerd Font.
+Keep a character (a space) after each icon, otherwise the edge of the icon may be cropped.
+
+Example, ASCII only (no Nerd Font needed):
 ```nim
-import
-  std/terminal,     # import standard terminal lib
-  std/strutils,
-  getDistroId,      # import to get distro id through /etc/os-release
-  ../assets/logos,  # uncomment if you use your own logo
-  ../nitches/[getUser, getHostname,
-                  getDistro, getKernel,
-                  getUptime, getShell,
-                  getPkgs, getRam, getLogo,
-                  getOpenwrt]  # import nitches to get info about user system
-
-# the main function for drawing fetch
-proc drawInfo*(asciiArt: bool) =
-  let  # distro id (arch, manjaro, debian)
-    distroId = getDistroId()
-    openwrt = isOpenwrt(distroId)  # OpenWrt, LEDE or a derivative
-
-  let  # logo and it color
-    coloredLogo = getLogo(if openwrt: "openwrt" else: distroId)  # color + logo tuple
-    # (fgRed, nitchLogo)
-
-  const  # icons before cotegores
-    userIcon   = " "  # recomended: " " or "|>"
-    hnameIcon  = " "  # recomended: " " or "|>"
-    distroIcon = "󰻀 "  # recomended: "󰻀 " or "|>"
-    kernelIcon = "󰌢 "  # recomended: "󰌢 " or "|>"
-    uptimeIcon = " "  # recomended: " " or "|>"
-    shellIcon  = " "  # recomended: " " or "|>"
-    pkgsIcon   = "󰏖 "  # recomended: "󰏖 " or "|>"
-    ramIcon    = "󰍛 "  # recomended: "󰍛 " or "|>"
-    colorsIcon = "󰏘 "  # recomended: "󰏘 " or "->"
-    # OpenWrt only
-    modelIcon  = "\u{F0469} "  # 󰑩 router   recomended: "\u{F0469} " or "|>"
-    cpuIcon    = "\u{F4BC} "   #  cpu      recomended: "\u{F4BC} " or "|>"
-    targetIcon = "\u{F061A} "  # 󰘚 chip     recomended: "\u{F061A} " or "|>"
-    diskIcon   = "\u{F02CA} "  # 󰋊 harddisk recomended: "\u{F02CA} " or "|>"
-    loadIcon   = "\u{F029A} "  # 󰊚 gauge    recomended: "\u{F029A} " or "|>"
-    # please insert any char after the icon
-    # to avoid the bug with cropping the edge of the icon
-
-    dotIcon = ""  # recomended: "" or "■"
-    # icon for demonstrate colors
-
-  const  # categories
-    userCat   = " user   │ "  # recomended: " user   │ "
-    hnameCat  = " hname  │ "  # recomended: " hname  │ "
-    distroCat = " distro │ "  # recomended: " distro │ "
-    kernelCat = " kernel │ "  # recomended: " kernel │ "-
-    uptimeCat = " uptime │ "  # recomended: " uptime │ "
-    shellCat  = " shell  │ "  # recomended: " shell  │ "
-    pkgsCat   = " pkgs   │ "  # recomended: " pkgs   │ "
-    ramCat    = " memory │ "  # recomended: " memory │ "
-    colorsCat = " colors │ "  # recomended: " colors │ "
-    # OpenWrt only
-    modelCat  = " model  │ "
-    cpuCat    = " cpu    │ "
-    targetCat = " target │ "
-    diskCat   = " disk   │ "
-    loadCat   = " load   │ "
-
-  var  # all info about system
-    userInfo     = getUser()          # get user through $USER env variable
-    hostnameInfo = getHostname()      # get Hostname hostname through /etc/hostname
-    distroInfo   = getDistro()        # get distro through /etc/os-release (or /etc/openwrt_release)
-    kernelInfo   = getKernel()        # get kernel through /proc/version
-    uptimeInfo   = getUptime()        # get Uptime through /proc/uptime file
-    shellInfo    = getShell()         # get shell through $SHELL env variable
-    pkgsInfo     = getPkgs(distroId)  # get amount of packages in distro
-    ramInfo      = getRam()           # get ram through /proc/meminfo
-
-  var  # OpenWrt only, empty values are not displayed
-    modelInfo, cpuInfo, targetInfo, diskInfo, loadInfo: string
-
-  if openwrt:
-    modelInfo  = getModel()    # /tmp/sysinfo/model, device-tree, /proc/cpuinfo
-    cpuInfo    = getCpu()      # /proc/cpuinfo (system type, Hardware, model name)
-    targetInfo = getTarget()   # DISTRIB_TARGET + DISTRIB_ARCH
-    diskInfo   = getStorage()  # free space on /overlay (writable flash)
-    loadInfo   = getLoad()     # /proc/loadavg
-
-    let revision = getRevision()  # r23809-234f1a2efa
-    if revision != "" and revision notin distroInfo:
-      distroInfo &= " " & revision
-
-  const  # aliases for colors
-    color1 = fgRed
-    color2 = fgYellow
-    color3 = fgGreen
-    color4 = fgCyan
-    color5 = fgBlue
-    color6 = fgMagenta
-    color7 = fgWhite
-    color8 = fgBlack
-    color0 = fgDefault
-
-  # ascii art
-  if not asciiArt:
-    discard
-  else:
-    stdout.styledWrite(styleBright, coloredLogo[0], coloredLogo[1], color0)
-
-  # colored out
-  stdout.styledWrite("\n", styleBright, "  ╭───────────╮\n")
-  stdout.styledWrite("  │ ", color2, userIcon, color0, userCat, color1, userInfo, color0, "\n",)
-  if not isEmptyOrWhitespace(hostnameInfo):
-    stdout.styledWrite("  │ ", color2, hnameIcon, color0, hnameCat, color2, hostnameInfo, color0, "\n")
-  stdout.styledWrite("  │ ", color3, distroIcon, color0, distroCat, color3, distroInfo, color0, "\n")
-  stdout.styledWrite("  │ ", color4, kernelIcon, color0, kernelCat, color4, kernelInfo, color0, "\n")
-  stdout.styledWrite("  │ ", color5, uptimeIcon, color0, uptimeCat, color5, uptimeInfo, color0, "\n")
-  stdout.styledWrite("  │ ", color6, shellIcon, color0, shellCat, color6, shellInfo, color0, "\n")
-  stdout.styledWrite("  │ ", color1, pkgsIcon, color0, pkgsCat, color1, pkgsInfo, color0, "\n")
-  stdout.styledWrite("  │ ", color2, ramIcon, color0, ramCat, fgYellow, ramInfo, color0, "\n")
-
-  # OpenWrt only
-  if modelInfo != "":
-    stdout.styledWrite("  │ ", color3, modelIcon, color0, modelCat, color3, modelInfo, color0, "\n")
-  if cpuInfo != "":
-    stdout.styledWrite("  │ ", color4, cpuIcon, color0, cpuCat, color4, cpuInfo, color0, "\n")
-  if targetInfo != "":
-    stdout.styledWrite("  │ ", color5, targetIcon, color0, targetCat, color5, targetInfo, color0, "\n")
-  if diskInfo != "":
-    stdout.styledWrite("  │ ", color6, diskIcon, color0, diskCat, color6, diskInfo, color0, "\n")
-  if loadInfo != "":
-    stdout.styledWrite("  │ ", color1, loadIcon, color0, loadCat, color1, loadInfo, color0, "\n")
-  stdout.styledWrite("  ├───────────┤\n")
-  stdout.styledWrite("  │ ", color7, colorsIcon, color0, colorsCat, color7, dotIcon, " ", color1, dotIcon, " ", color2, dotIcon, " ", color3, dotIcon, " ", color4, dotIcon, " ", color5, dotIcon, " ", color6, dotIcon, " ", color8, dotIcon, color0, "\n")
-  stdout.styledWrite("  ╰───────────╯\n\n")
+const  # icons before categories
+  userIcon   = "|> "
+  hnameIcon  = "|> "
+  distroIcon = "|> "
+  # ...
+  colorsIcon = "-> "
+  dotIcon    = "\u{25A0}"  # ■
 ```
 
-# Building 📦
+Example, with Nerd Font glyphs written as code points:
+```nim
+const
+  userIcon   = "\u{F007} "   # nf-fa-user
+  distroIcon = "\u{F0EC0} "  # nf-md-penguin
+  ramIcon    = "\u{F035B} "  # nf-md-memory
+```
+
+### Labels
+Each label is a plain string, padded so that the `│` separators line up:
+```nim
+const  # categories
+  userCat   = " user   │ "
+  kernelCat = " kernel │ "
+```
+If you rename a label, keep the same width for all of them (and adjust the
+`╭───────────╮` / `├───────────┤` / `╰───────────╯` borders if you change the width).
+
+### Colors
+| alias | default |
+|---|---|
+| `color1` | `fgRed` |
+| `color2` | `fgYellow` |
+| `color3` | `fgGreen` |
+| `color4` | `fgCyan` |
+| `color5` | `fgBlue` |
+| `color6` | `fgMagenta` |
+| `color7` | `fgWhite` |
+| `color8` | `fgBlack` |
+| `color0` | `fgDefault` (reset) |
+
+Any value of [`ForegroundColor`](https://nim-lang.org/docs/terminal.html#ForegroundColor)
+from `std/terminal` can be used.
+
+### Lines
+Each line of the fetch is one `stdout.styledWrite(...)` call at the end of `drawInfo`:
+delete or comment out a call to hide a line, or move it to change the order.
+Lines whose value is empty (e.g. the OpenWrt fields on a desktop) are not displayed.
+
+<br>
+
+# Building
 ### 0) install [nim](https://nim-lang.org/)
 
 ### 1) clone repo
@@ -289,7 +247,7 @@ Then copy it to the device, e.g. `scp -O nitch-armv7 root@192.168.1.1:/usr/bin/n
 
 <br>
 
-# File architecture 📁
+# File architecture
 ```fish
 nitch
   ├── LICENSE
@@ -351,7 +309,7 @@ nitch
   7 directories, 48 files
 ```
 
-# Thanks for ideas & examples 💬
+# Thanks for ideas & examples
 - [pfetch](https://github.com/dylanaraps/pfetch/)
 - [neofetch](https://github.com/dylanaraps/neofetch)
 - [paleofetch](https://github.com/ss7m/paleofetch)

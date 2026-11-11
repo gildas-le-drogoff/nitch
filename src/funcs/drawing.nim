@@ -19,26 +19,26 @@ proc drawInfo*(asciiArt: bool) =
     coloredLogo = getLogo(if openwrt: "openwrt" else: distroId)  # color + logo tuple
     # (fgRed, nitchLogo)
 
-  const  # icons before cotegores
-    userIcon   = " "  # recomended: " " or "|>"
-    hnameIcon  = " "  # recomended: " " or "|>"
-    distroIcon = "󰻀 "  # recomended: "󰻀 " or "|>"
-    kernelIcon = "󰌢 "  # recomended: "󰌢 " or "|>"
-    uptimeIcon = " "  # recomended: " " or "|>"
-    shellIcon  = " "  # recomended: " " or "|>"
-    pkgsIcon   = "󰏖 "  # recomended: "󰏖 " or "|>"
-    ramIcon    = "󰍛 "  # recomended: "󰍛 " or "|>"
-    colorsIcon = "󰏘 "  # recomended: "󰏘 " or "->"
+  const  # icons before categories (Nerd Font glyphs, written as code points)
+    userIcon   = "\u{F007} "    # nf-fa-user              recommended: "\u{F007} " or "|> "
+    hnameIcon  = "\u{E714} "    # nf-dev-ghost_small      recommended: "\u{E714} " or "|> "
+    distroIcon = "\u{F0EC0} "   # nf-md-penguin           recommended: "\u{F0EC0} " or "|> "
+    kernelIcon = "\u{F0322} "   # nf-md-laptop            recommended: "\u{F0322} " or "|> "
+    uptimeIcon = "\u{F017} "    # nf-fa-clock_o           recommended: "\u{F017} " or "|> "
+    shellIcon  = "\u{F489} "    # nf-oct-terminal         recommended: "\u{F489} " or "|> "
+    pkgsIcon   = "\u{F03D6} "   # nf-md-package_variant   recommended: "\u{F03D6} " or "|> "
+    ramIcon    = "\u{F035B} "   # nf-md-memory            recommended: "\u{F035B} " or "|> "
+    colorsIcon = "\u{F03D8} "   # nf-md-palette           recommended: "\u{F03D8} " or "-> "
     # OpenWrt only
-    modelIcon  = "\u{F0469} "  # 󰑩 router   recomended: "\u{F0469} " or "|>"
-    cpuIcon    = "\u{F4BC} "   #  cpu      recomended: "\u{F4BC} " or "|>"
-    targetIcon = "\u{F061A} "  # 󰘚 chip     recomended: "\u{F061A} " or "|>"
-    diskIcon   = "\u{F02CA} "  # 󰋊 harddisk recomended: "\u{F02CA} " or "|>"
-    loadIcon   = "\u{F029A} "  # 󰊚 gauge    recomended: "\u{F029A} " or "|>"
+    modelIcon  = "\u{F0469} "   # nf-md-router_wireless   recommended: "\u{F0469} " or "|> "
+    cpuIcon    = "\u{F4BC} "    # nf-oct-cpu              recommended: "\u{F4BC} " or "|> "
+    targetIcon = "\u{F061A} "   # nf-md-chip              recommended: "\u{F061A} " or "|> "
+    diskIcon   = "\u{F02CA} "   # nf-md-harddisk          recommended: "\u{F02CA} " or "|> "
+    loadIcon   = "\u{F029A} "   # nf-md-gauge             recommended: "\u{F029A} " or "|> "
     # please insert any char after the icon
     # to avoid the bug with cropping the edge of the icon
 
-    dotIcon = ""  # recomended: "" or "■"
+    dotIcon = "\u{F444}"  # nf-oct-dot_fill, recommended: "\u{F444}" or "\u{25A0}" (■)
     # icon for demonstrate colors
 
   const  # categories
