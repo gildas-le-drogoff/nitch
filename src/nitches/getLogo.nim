@@ -23,4 +23,5 @@ func getLogo*(distroId: string): (ForegroundColor, string) =
   of "arcolinux":   (fgBlue, arcoLogo)
   of "cachyos":     (fgCyan, cachyosLogo)
   of "kiss":        (fgMagenta, kissLogo)
+  of "void":        (fgGreen, voidLogo)
   else:             (fgRed, nitchLogo)
