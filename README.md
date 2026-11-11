@@ -66,9 +66,32 @@ On any other distro, the package manager is auto-detected from its database
 <br>
 
 # Installation
-```fish
-wget https://raw.githubusercontent.com/unxsh/nitch/main/setup.sh && sh setup.sh
+```sh
+wget https://raw.githubusercontent.com/gildas-le-drogoff/nitch/main/setup.sh && sh setup.sh
 ```
+`setup.sh` detects the architecture, downloads the matching static binary from the
+[latest release](https://github.com/gildas-le-drogoff/nitch/releases/latest), checks its
+SHA256 and installs it to `/usr/local/bin/nitch` (`/usr/bin/nitch` when there is no
+`/usr/local/bin`, e.g. on OpenWrt). It works with busybox and needs `curl`, `wget` or `uclient-fetch`.
+
+Options (environment variables):
+```sh
+NITCH_VERSION=0.3.0 sh setup.sh   # a given release instead of the latest one
+PREFIX=$HOME/.local sh setup.sh   # install to ~/.local/bin, no sudo
+```
+
+Prebuilt binaries (static, no dependency):
+
+| file | architecture | typical devices |
+|---|---|---|
+| `nitch-amd64` | x86_64 | PCs, servers |
+| `nitch-arm64` | aarch64 | Raspberry Pi 3/4/5 (64-bit kernel), ARM servers |
+| `nitch-armv7` | ARMv7 hard-float | Raspberry Pi 2/3 (32-bit), OpenWrt `arm_cortex-a*` |
+| `nitch-mips` | MIPS32r2 big-endian, soft-float | OpenWrt `ath79` routers (`mips_24kc`) |
+| `nitch-mipsel` | MIPS32r2 little-endian, soft-float | OpenWrt `ramips` routers (`mipsel_24kc`) |
+
+The icons need a [Nerd Font](https://www.nerdfonts.com/) in your terminal; to use ASCII
+icons instead, see [Configuration](#configuration). Other architectures: see [Building](#building).
 
 # Usage
 ```
@@ -84,8 +107,8 @@ flags:
 ```
 
 # Uninstall
-```fish
-sudo rm /usr/local/bin/nitch
+```sh
+sudo rm /usr/local/bin/nitch   # or /usr/bin/nitch on OpenWrt
 ```
 
 <br>
@@ -107,7 +130,10 @@ The build revision (e.g. `r23809-234f1a2efa`) is appended to the distro name.
 When `$USER` / `$SHELL` are unset (common with dropbear/ash), `nitch` falls back to
 `$LOGNAME` and `/etc/passwd`. Memory is computed even without `MemAvailable` (kernels < 3.14).
 
-See [Building](#building) to build a static ARMv7 binary for your router.
+`sh setup.sh` works on the router itself (`nitch-armv7`, `nitch-mips` or `nitch-mipsel`).
+If the router cannot download over HTTPS, copy the binary from your PC:
+`scp -O nitch-mips root@192.168.1.1:/usr/bin/nitch`.
+See [Building](#building) to build it yourself.
 
 <br>
 
@@ -245,6 +271,15 @@ CROSS=armv7l-linux-musleabihf nimble armv7
 ```
 Then copy it to the device, e.g. `scp -O nitch-armv7 root@192.168.1.1:/usr/bin/nitch`.
 
+### release binaries (amd64, arm64, armv7, mips, mipsel)
+With [zig](https://ziglang.org/) (cross C compiler for amd64, arm64, mips and mipsel)
+and the ARMv7 musl toolchain above in your `PATH`:
+```sh
+nimble release
+```
+This builds the 5 static binaries of the [releases](https://github.com/gildas-le-drogoff/nitch/releases)
+and their `SHA256SUMS` in `dist/`. The build is reproducible: the checksums match the published ones.
+
 <br>
 
 # File architecture
@@ -288,6 +323,8 @@ nitch
   │   │   └── getUser.nim
   │   ├── nitch.nim
   │   └── nitch.nim.cfg
+  ├── tools
+  │   └── zigcc.sh
   └── templates
       ├── bfetch
       ├── cfgParser.nim
@@ -306,7 +343,7 @@ nitch
       ├── testProc.nim
       └── tupleTest.nim
 
-  7 directories, 48 files
+  8 directories, 49 files
 ```
 
 # Thanks for ideas & examples
