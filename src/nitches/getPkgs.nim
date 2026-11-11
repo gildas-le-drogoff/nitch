@@ -3,7 +3,7 @@ import
   ../funcs/packages/[getPacmanPkgs, getRpmPkgs,
                      getPortagePkgs, getXbpsPkgs,
                      getDpkgPkgs, getKissPkgs,
-                     getNixPkgs]
+                     getNixPkgs, getOpkgPkgs]
 
 # guess the package manager from its database when the distro id is unknown
 proc detectPkgs(): string =
@@ -21,6 +21,12 @@ proc detectPkgs(): string =
     result = getRpmPkgs()
   elif dirExists("/run/current-system/sw"):
     result = getNixPkgs()
+  elif fileExists("/etc/openwrt_release"):
+    result = getOpenwrtPkgs()
+  elif fileExists("/lib/apk/db/installed"):
+    result = getApkPkgs()
+  elif fileExists("/usr/lib/opkg/status") or fileExists("/usr/lib/ipkg/status"):
+    result = getOpkgPkgs()
   else:
     result = ">3"
 
@@ -47,6 +53,12 @@ proc getPkgs*(distroId: string): string =
 
   of "ubuntu", "debian", "linuxmint", "pop", "zorin":
     result = getDpkgPkgs()
+
+  of "openwrt", "lede":
+    result = getOpenwrtPkgs()
+
+  of "alpine":
+    result = getApkPkgs()
 
   else:
     result = detectPkgs()

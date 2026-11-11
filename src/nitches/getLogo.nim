@@ -32,4 +32,5 @@ func getLogo*(distroId: string): (ForegroundColor, string) =
   of "rocky":       (fgGreen, rockyLogo)
   of "nixos":       (fgBlue, nixosLogo)
   of "bedrock":     (fgWhite, bedrockLogo)
+  of "openwrt", "lede": (fgBlue, openwrtLogo)
   else:             (fgRed, nitchLogo)
