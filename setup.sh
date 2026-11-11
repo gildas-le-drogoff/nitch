@@ -10,18 +10,21 @@ echo ""
 read -p "Use nerd font symbols? (y/n): " symbolsYN
 echo "Installation..."
 
+# Convert the input to lowercase
+symbolsYN=$(echo "$symbolsYN" | tr '[:upper:]' '[:lower:]')
+
 case $symbolsYN in
-  "y")
+ "y")
     wget $linkNerd
     chmod +x nitchNerd
     sudo mv nitchNerd /usr/local/bin/nitch
-  ;;
+ ;;
 
-  "n")
+ "n")
     wget $linkNoNerd
     chmod +x nitchNoNerd
     sudo mv nitchNoNerd /usr/local/bin/nitch
-  ;;
+ ;;
 esac
 
 echo ""
