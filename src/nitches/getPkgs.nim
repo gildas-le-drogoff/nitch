@@ -37,6 +37,9 @@ proc getPkgs*(distroId: string): string =
 
   of "debian":
     result = getDpkgPkgs()
+  
+  of "linuxmint":
+    result = getDpkgPkgs()
 
   of "pop":
     result = getDpkgPkgs()
